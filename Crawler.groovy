@@ -3,7 +3,7 @@
 import java.util.regex.Pattern;
 
 try {
-    List urls = GLOBALS.list("urls", "http://google.com");
+    List urls = GLOBALS.list("urls");
     String url = Variations.any(urls);
     HTTP.get({ line ->
         for (String href : HTTP.parse(Pattern.compile("href=[\"\']([^\"\']+)[\"\']"), line))  {
