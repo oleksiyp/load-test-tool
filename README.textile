@@ -1,4 +1,4 @@
-h1. Web load test tool v1.0
+h1. Loadtest tool
 
 Tool could be used to test load your web application using different scenarios. Scripts are written in groovy using special test environment.
 
@@ -18,15 +18,28 @@ h3. Variations
 
     select(prob1, closure1, prob2, closure2, prob3, closure3, ...)
 
+    Select one of the closures to execute depending on probability. Probabilites
+    could be not normalized: i.e. sum(prob~i~) != 1.0
+
     any(arguments...);
+
+    Select one of arguments with equal probability.
 
 h3. HTTP
 
     get([Closure reporter, ]String ...urls)
 
+    Gets value of one(!randomly selected) of urls and reads line by line calling reporter(line).
+    If reporter is not specified returns array of strings - lines of this file.
+
     parse(Pattern regex, String ...html)
 
-    resolve(String uri, String path)
+    Process text throught regular expression and selects regular expression groups.
+    Returns 2-d array if several groups used and 1-d if one.
+
+    resolve(String url, String path)
+
+    Resolves path relative to url.
 
 h2. License
 
