@@ -38,7 +38,7 @@ public class Stats {
             if (count == 0 || minimum > time) {
                 minimum = time;
             }
-            if (count == 0 || maximum > time) {
+            if (count == 0 || maximum < time) {
                 maximum = time;
             }
             this.time += time;
