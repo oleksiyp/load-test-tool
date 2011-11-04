@@ -1,0 +1,21 @@
+h1. Web load test tool v1.0
+
+Tool could be used to test load your web application using different scenarios. Scripts are written in groovy using special test environment.
+
+h2. Run
+
+Copy one loadtest-1.0.jar and Example*.groovy from repository to one of directories on your computer. Use java to run it from commandline:
+
+java -jar loadtest-1.0.jar Example1.groovy
+
+h2. Environment
+
+In groovy following classes avialable: HTTP and Variations.
+
+h2. License
+
+Load test tool is distributed on terms of BSD-license. Look at src/main/resources/BSD-LICENSE.txt for details.
+
+Groovy used internally by load test tool is licensed under the Apache 2 license:
+
+http://www.apache.org/licenses/LICENSE-2.0.html
