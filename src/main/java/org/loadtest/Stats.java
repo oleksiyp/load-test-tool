@@ -92,14 +92,14 @@ public class Stats {
                     urlStat.getMinimum(),
                     urlStat.getAvarage(),
                     urlStat.getMaximum(),
-                    urlStat.getUrl());
+                    urlStat.getUrl().substring(0, Math.min(45, urlStat.getUrl().length())));
 
         }
     }
 
     private class UrlStatComparator implements Comparator<UrlStat> {
         public int compare(UrlStat o1, UrlStat o2) {
-            return Double.compare(o1.getAvarage(), o2.getAvarage());
+            return -Double.compare(o1.getAvarage(), o2.getAvarage());
         }
     }
 }

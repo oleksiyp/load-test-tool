@@ -1,7 +1,7 @@
 package org.loadtest;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.swing.event.ListSelectionEvent;
+import java.util.*;
 
 /**
  * Object used by scripts to interchange values
@@ -16,6 +16,17 @@ public class Globals {
     public synchronized Object get(String name) {
         return values.get(name);
     }
+
+    public synchronized List list(String name, Object ...defaultValues) {
+        List list = (List) values.get(name);
+        if (list == null) {
+            list = Collections.synchronizedList(new ArrayList());
+            list.addAll(Arrays.asList(defaultValues));
+            values.put(name, list);
+        }
+        return list;
+    }
+
     public synchronized long increment(String name) {
         Number num = (Number)values.get(name);
         if (num == null) {

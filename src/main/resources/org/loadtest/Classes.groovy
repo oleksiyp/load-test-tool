@@ -30,6 +30,12 @@ class Variations{
         return args[getBindings().RANDOM.nextInt(args.length)];
     }
 
+    public static def any(List args) {
+        synchronized(args) {
+            return args.get(getBindings().RANDOM.nextInt(args.size()));
+        }
+    }
+
     public static void main(String[] args) {}
 }
 
@@ -69,7 +75,7 @@ class HTTP {
 
     public static def get(String ...urls) {
         List result = new ArrayList();
-        return get({line->result.add(list)}, urls);
+        HTTP.get({line->result.add(line);}, urls);
         return result.toArray(new String[result.size()]);
     }
 
