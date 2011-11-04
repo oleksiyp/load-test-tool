@@ -130,7 +130,7 @@ public class Globals {
         return values.get(name);
     }
 
-    public synchronized List list(String name, String []defaultValues) {
+    public synchronized List list(String name, String ...defaultValues) {
         List list = (List) values.get(name);
         if (list == null) {
             list = Collections.synchronizedList(new ArrayList(Arrays.asList(defaultValues)));

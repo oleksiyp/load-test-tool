@@ -69,6 +69,7 @@ public class LoadTest {
         LoadTest testload = new LoadTest(new Options().parse(args));
         Scanner scanner = new Scanner(System.in);
         try {
+            Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
             do {
                 System.out.println("Starting(press q[ENTER] - to quit, [ENTER] - to stop)");
                 testload.start();
