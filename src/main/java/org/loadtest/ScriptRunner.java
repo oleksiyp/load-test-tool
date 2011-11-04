@@ -17,15 +17,13 @@ import java.util.Random;
  */
 public class ScriptRunner implements Runnable {
     private LoadTest load;
-    private List scripts;
     private Stats stats = new Stats();
     private Globals globals = new Globals();
     private Random random = new Random();
     private static ThreadLocal local = new ThreadLocal();
 
-    public ScriptRunner(LoadTest load, List scripts) {
+    public ScriptRunner(LoadTest load) {
         this.load = load;
-        this.scripts = scripts;
     }
 
     protected Binding createNewBinding() {
@@ -37,15 +35,29 @@ public class ScriptRunner implements Runnable {
     }
 
     public void run() {
+        synchronized (stats) {
+            if (load.getOptions().getRequests() != -1
+                    && stats.getRuns() >= load.getOptions().getRequests()) {
+                stats.report(Integer.MAX_VALUE);
+                System.out.println("Finnished(press q[ENTER] - to quit, [ENTER][ENTER] - to restart)");
+                load.stop();
+                return;
+            }
+            stats.addRun();
+        }
         Binding binding = createNewBinding();
         GroovyShell shell = new GroovyShell(binding);
-        stats.addRun();
         try {
             local.set(shell);
-            GroovyCodeSource functions =  new GroovyCodeSource(ScriptRunner.class.getResource("Classes.groovy"));
-            shell.evaluate(functions);
-            for (Object script : scripts) {
-                shell.evaluate((File)script);
+
+            shell.evaluate(new GroovyCodeSource(ScriptRunner.class.getResource("Classes.groovy")));
+
+            for (File script : load.getOptions().getScripts()) {
+                shell.evaluate(script);
+            }
+
+            for (String script : load.getOptions().getScriptTexts()) {
+                shell.evaluate(script);
             }
         } catch (CompilationFailedException e) {
             stats.addError();

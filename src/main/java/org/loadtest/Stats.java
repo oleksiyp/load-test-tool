@@ -12,15 +12,19 @@ public class Stats {
 
     public synchronized void reset() {
         runs = 0;
-        queries = 0;
+        samples = 0;
         errors = 0;
         urlStats = new TreeMap();
     }
 
     private int runs;
-    private int queries;
+    private int samples;
     private int errors;
     private Map urlStats;
+
+    public int getRuns() {
+        return runs;
+    }
 
     private static class UrlStat {
         private int count;
@@ -67,8 +71,8 @@ public class Stats {
     }
 
     public synchronized void addRun() { runs++; }
-    public synchronized void addQuery(String url, long time) {
-        queries++;
+    public synchronized void addSample(String url, long time) {
+        samples++;
         UrlStat stat = (UrlStat) urlStats.get(url);
         if (stat == null) {
             stat = new UrlStat(url);
@@ -81,7 +85,7 @@ public class Stats {
     public synchronized void report(int slowQueriesToShow) {
         System.out.println("Stats{" +
                 "runs=" + runs +
-                ", queries=" + queries +
+                ", samples=" + samples +
                 ", errors=" + errors +
                 '}');
         List lst = new ArrayList(urlStats.values());
