@@ -68,7 +68,9 @@ class HTTP {
     }
 
     public static def get(String ...urls) {
-        return get(null, urls);
+        List result = new ArrayList();
+        return get({line->result.add(list)}, urls);
+        return result.toArray(new String[result.size()]);
     }
 
     public static def parse(Pattern regex, String ...html) {

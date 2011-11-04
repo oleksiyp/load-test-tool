@@ -10,7 +10,23 @@ java -jar loadtest-1.0.jar Example1.groovy
 
 h2. Environment
 
-In groovy following classes avialable: HTTP and Variations.
+For groovy scripts following classes avialable: HTTP and Variations. HTTP class could
+be used to create load. Variation helps to create non-deterministic behavior.
+Look groovy documentation and src/main/resources/org/loadtest/Classes.groovy for details.
+
+h3. Variations
+
+    select(prob1, closure1, prob2, closure2, prob3, closure3, ...)
+
+    any(arguments...);
+
+h3. HTTP
+
+    get([Closure reporter, ]String ...urls)
+
+    parse(Pattern regex, String ...html)
+
+    resolve(String uri, String path)
 
 h2. License
 
