@@ -19,14 +19,11 @@ import java.util.concurrent.TimeUnit;
  * Main entry point.
  */
 public class LoadTest {
-    private Options options;
+    private final Options options;
     private ScheduledExecutorService executor;
     private ScheduledExecutorService printExecutor;
     private ScriptRunner scriptRunner;
 
-    public LoadTest(int threads, long delay, File script) {
-        this.options = new Options(threads, delay, script);
-    }
     public LoadTest(Options options) {
         this.options = options;
     }
@@ -35,12 +32,16 @@ public class LoadTest {
         if (executor != null) {
             return;
         }
-        scriptRunner = new ScriptRunner(this, options.scripts);
-        executor = Executors.newScheduledThreadPool(options.threads);
-        for (int i = 0; i < options.threads; i++) {
+        scriptRunner = new ScriptRunner(this);
+        executor = Executors.newScheduledThreadPool(options.concurrentThreads);
+        for (int i = 0; i < options.concurrentThreads; i++) {
+            long initDelay = (long)(1000L * options.delay * i / options.concurrentThreads);
+            long delay = (long)(1000L * options.delay);
+            if (initDelay <= 0) initDelay = 0;
+            if (delay <= 0) delay = 1;
             executor.scheduleWithFixedDelay(scriptRunner,
-                    options.delay * i / options.threads,
-                    options.delay,
+                    initDelay,
+                    delay,
                     TimeUnit.MILLISECONDS);
         }
 
@@ -86,24 +87,35 @@ public class LoadTest {
         return scriptRunner;
     }
 
-    private static class Options {
-        @Option(name="-n", usage="number of threads")
-        private int threads = 1;
+    public Options getOptions() {
+        return options;
+    }
 
-        @Option(name="-d", usage="delay between requests")
-        private long delay = 1;
+    public static class Options {
+        @Option(name="-n", usage="Number of runs to perform", aliases = "--runs-number")
+        private int requests = -1;
 
-        @Option(name="-s", usage="number of the slowest queries to show in statistics")
+        @Option(name="-c", usage="Number of concurrent threads", aliases = "--threads")
+        private int concurrentThreads = 1;
+        /*
+        @Option(name="-t", usage="Seconds to max. wait for responses", aliases = "--time-limit")
+        private double timelimit = 0;
+        */
+
+        @Option(name="-h", usage="Display usage information", aliases="--help")
+        private boolean displayUsage = false;
+
+        @Option(name="-d", usage="Seconds to delay between requests", aliases="--delay")
+        private double delay = 0;
+
+        @Option(name="-s", usage="Number of the slowest queries to show in statistics(by default 24)", aliases="--show-slows")
         private int slowQueriesToShow = 24;
+
+        @Option(name="-e", usage="Evaluate groovy script", aliases="--eval")
+        private List<String> scriptTexts = new ArrayList<String>();
 
         @Argument
         private List<File> scripts = new ArrayList();
-
-        public Options(int threads, long delay, File script) {
-            this.threads = threads;
-            this.delay = delay;
-            this.scripts.add(script);
-        }
 
         public Options() {
         }
@@ -112,7 +124,7 @@ public class LoadTest {
             CmdLineParser parser = new CmdLineParser(this);
             try {
                 parser.parseArgument(args);
-                if (scripts.isEmpty()) {
+                if ((scripts.isEmpty() && scriptTexts.isEmpty()) || displayUsage) {
                     usage(parser, new CmdLineException(parser, "specify one or more scripts"));
                 }
             } catch (CmdLineException e) {
@@ -126,6 +138,54 @@ public class LoadTest {
             System.err.println("java -jar loadtest.jar [options...] scripts...");
             parser.printUsage(System.err);
             System.exit(1);
+        }
+
+        public int getRequests() {
+            return requests;
+        }
+
+        public void setRequests(int requests) {
+            this.requests = requests;
+        }
+
+        public int getConcurrentThreads() {
+            return concurrentThreads;
+        }
+
+        public void setConcurrentThreads(int concurrentThreads) {
+            this.concurrentThreads = concurrentThreads;
+        }
+
+        public boolean isDisplayUsage() {
+            return displayUsage;
+        }
+
+        public void setDisplayUsage(boolean displayUsage) {
+            this.displayUsage = displayUsage;
+        }
+
+        public double getDelay() {
+            return delay;
+        }
+
+        public void setDelay(double delay) {
+            this.delay = delay;
+        }
+
+        public int getSlowQueriesToShow() {
+            return slowQueriesToShow;
+        }
+
+        public void setSlowQueriesToShow(int slowQueriesToShow) {
+            this.slowQueriesToShow = slowQueriesToShow;
+        }
+
+        public List<String> getScriptTexts() {
+            return scriptTexts;
+        }
+
+        public List<File> getScripts() {
+            return scripts;
         }
     }
 

@@ -68,8 +68,11 @@ class HTTP {
             }
         }
         reader.close();
+        if (conn instanceof HttpURLConnection) {
+            conn.disconnect();
+        }
         long end = System.currentTimeMillis();
-        getBindings().STATS.addQuery(urlString, end - start);
+        getBindings().STATS.addSample(urlString, end - start);
         return result;
     }
 
