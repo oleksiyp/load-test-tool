@@ -18,7 +18,7 @@ import java.util.Random;
 public class ScriptRunner implements Runnable {
     private LoadTest load;
     private Stats stats = new Stats();
-    private Globals globals = new Globals();
+    private Object globals;
     private Random random = new Random();
     private static ThreadLocal local = new ThreadLocal();
 
@@ -29,7 +29,6 @@ public class ScriptRunner implements Runnable {
     protected Binding createNewBinding() {
         Binding binding = new Binding();
         binding.setVariable("STATS", stats);
-        binding.setVariable("GLOBALS", globals);
         binding.setVariable("RANDOM", random);
         return binding;
     }
@@ -52,13 +51,21 @@ public class ScriptRunner implements Runnable {
 
             shell.evaluate(new GroovyCodeSource(ScriptRunner.class.getResource("Classes.groovy")));
 
-            for (File script : load.getOptions().getScripts()) {
-                shell.evaluate(script);
+            synchronized (this) {
+                if (globals == null) {
+                    globals = shell.evaluate("new Globals()");
+                }
             }
+            binding.setVariable("GLOBALS", globals);
 
             for (String script : load.getOptions().getScriptTexts()) {
                 shell.evaluate(script);
             }
+
+            for (File script : load.getOptions().getScripts()) {
+                shell.evaluate(script);
+            }
+
         } catch (CompilationFailedException e) {
             stats.addError();
             errorCase(e);
