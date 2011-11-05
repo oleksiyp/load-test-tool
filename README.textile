@@ -6,7 +6,9 @@ h2. Run
 
 Copy one loadtest-1.0.jar and Example*.groovy from repository to one of directories on your computer. Use java to run it from commandline:
 
+<pre>
 java -jar loadtest-1.0.jar Example1.groovy
+</pre>
 
 Use -h option to display command line information:
 
