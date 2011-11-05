@@ -28,14 +28,15 @@ public class LoadTestTool {
         this.options = options;
     }
 
-    public synchronized void start() {
+    public synchronized void start(int nThreads) {
         if (executor != null) {
             return;
         }
         scriptRunner = new ScriptRunner(this);
-        executor = Executors.newScheduledThreadPool(options.concurrentThreads);
-        for (int i = 0; i < options.concurrentThreads; i++) {
-            long initDelay = (long)(1000L * options.delay * i / options.concurrentThreads);
+        scriptRunner.init();
+        executor = Executors.newScheduledThreadPool(nThreads);
+        for (int i = 0; i < nThreads; i++) {
+            long initDelay = (long)(1000L * options.delay * i / nThreads);
             long delay = (long)(1000L * options.delay);
             if (initDelay <= 0) initDelay = 0;
             if (delay <= 0) delay = 1;
@@ -70,16 +71,22 @@ public class LoadTestTool {
     public static void main(String[] args) throws IOException {
         LoadTestTool testload = new LoadTestTool(new Options().parse(args));
         Scanner scanner = new Scanner(System.in);
+        int nThreads = testload.getOptions().getConcurrentThreads();
         try {
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
             do {
-                System.out.println("Starting(press q[ENTER] - to quit, [ENTER] - to stop)");
-                testload.start();
+                System.out.println("Starting with " + nThreads + " threads (press q[ENTER] - to quit, [ENTER] - to stop)");
+                testload.start(nThreads);
                 if (scanner.nextLine().equals("q")) {
                     break;
                 }
-                System.out.println("Stopping(press q[ENTER] - to quit, [ENTER] - to start)");
+                System.out.println("Stopping (press q[ENTER] - to quit, [ENTER] - to start)");
                 testload.stop();
+
+                int increment = testload.getOptions().getConcurrentThreadsIncrement();
+                if (increment > 0) {
+                    nThreads += increment;
+                }
             } while (!scanner.nextLine().equals("q"));
         } catch (Throwable thr) {
             System.out.println("Breaked");
@@ -98,8 +105,13 @@ public class LoadTestTool {
         @Option(name="-n", usage="Number of runs to perform", aliases = "--runs-number")
         private int requests = -1;
 
+
         @Option(name="-c", usage="Number of concurrent threads", aliases = "--threads")
         private int concurrentThreads = 1;
+
+        @Option(name="-ci", usage="Number of concurrent threads to increment after stop/start (use [ENTER])", aliases = "--threads-increment")
+        private int concurrentThreadsIncrement = 0;
+
         /*
         @Option(name="-t", usage="Seconds to max. wait for responses", aliases = "--time-limit")
         private double timelimit = 0;
@@ -118,10 +130,10 @@ public class LoadTestTool {
         private List<String> scriptTexts = new ArrayList<String>();
 
         @Option(name="-ie", usage="Evaluate init script to initialize globals", aliases="--init-eval")
-        private List<String> initScriptTexts;
+        private List<String> initScriptTexts = new ArrayList<String>();
 
         @Option(name="-if", usage="Runs init script to initialize globals", aliases="--init-file")
-        private List<File> initScripts;
+        private List<File> initScripts = new ArrayList<File>();
 
         @Argument
         private List<File> scripts = new ArrayList();
@@ -135,6 +147,9 @@ public class LoadTestTool {
                 parser.parseArgument(args);
                 if ((scripts.isEmpty() && scriptTexts.isEmpty()) || displayUsage) {
                     usage(parser, new CmdLineException(parser, "specify one or more scripts"));
+                }
+                if (concurrentThreads <= 1) {
+                    concurrentThreads = 1;
                 }
             } catch (CmdLineException e) {
                 usage(parser, e);
@@ -163,6 +178,14 @@ public class LoadTestTool {
 
         public void setConcurrentThreads(int concurrentThreads) {
             this.concurrentThreads = concurrentThreads;
+        }
+
+        public int getConcurrentThreadsIncrement() {
+            return concurrentThreadsIncrement;
+        }
+
+        public void setConcurrentThreadsIncrement(int concurrentThreadsIncrement) {
+            this.concurrentThreadsIncrement = concurrentThreadsIncrement;
         }
 
         public boolean isDisplayUsage() {
