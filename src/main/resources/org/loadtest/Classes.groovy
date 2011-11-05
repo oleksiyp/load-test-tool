@@ -27,11 +27,14 @@ class Variations{
     }
 
     public static def any(Object ...args) {
-        return args[getBindings().RANDOM.nextInt(args.length)];
+        return any(Arrays.asList(args));
     }
 
     public static def any(List args) {
         synchronized(args) {
+            if (args.size() == 0) {
+                return null
+            };
             return args.get(getBindings().RANDOM.nextInt(args.size()));
         }
     }
@@ -47,6 +50,9 @@ class HTTP {
     public static def get(Closure reporter, String ...urls) {
         long start = System.currentTimeMillis();
         String urlString = Variations.any(urls);
+        if (urlString == null) {
+            throw new IllegalArgumentException("url should not be null");
+        }
         URL url = new URL(urlString);
         URLConnection conn = url.openConnection();
         String contentType = conn.getContentType();

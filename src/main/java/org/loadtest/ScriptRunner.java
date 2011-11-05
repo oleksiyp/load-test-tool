@@ -90,6 +90,7 @@ public class ScriptRunner implements Runnable {
             stats.addError();
             errorCase(e);
         } catch (Throwable e) {
+            e.printStackTrace();
             stats.addError();
         } finally {
             local.remove();
