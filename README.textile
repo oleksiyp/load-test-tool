@@ -118,6 +118,7 @@ h3. Statistics
 * 0% Process file to calculate percentiles, etc
 * 0% Prepare data for Excel, GNU PLOT etc
 
+
 h2. License
 
 Load test tool is distributed on terms of BSD-license. Look at src/main/resources/BSD-LICENSE.txt for details.
