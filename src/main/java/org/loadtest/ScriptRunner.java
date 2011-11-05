@@ -2,6 +2,7 @@ package org.loadtest;
 
 import groovy.lang.Binding;
 import groovy.lang.GroovyCodeSource;
+import groovy.lang.GroovyRuntimeException;
 import groovy.lang.GroovyShell;
 import org.codehaus.groovy.control.CompilationFailedException;
 
@@ -25,13 +26,6 @@ public class ScriptRunner implements Runnable {
 
     public ScriptRunner(LoadTestTool loadTool) {
         this.loadTool = loadTool;
-    }
-
-    protected Binding createNewBinding() {
-        Binding binding = new Binding();
-        binding.setVariable("STATS", stats);
-        binding.setVariable("RANDOM", random);
-        return binding;
     }
 
     public void init() {
@@ -71,7 +65,9 @@ public class ScriptRunner implements Runnable {
             }
             stats.addRun();
         }
-        Binding binding = createNewBinding();
+        Binding binding = new Binding();
+        binding.setVariable("STATS", stats);
+
         GroovyShell shell = new GroovyShell(binding);
         try {
             LOCAL_SHELL.set(shell);
@@ -83,15 +79,17 @@ public class ScriptRunner implements Runnable {
                     globals = shell.evaluate("return new Globals()");
                 }
             }
-            binding.setVariable("GLOBALS", globals);
+            binding.setProperty("GLOBALS", globals);
 
             runner.run(shell);
 
         } catch (CompilationFailedException e) {
             stats.addError(e);
             errorCase(e);
-        } catch (Throwable e) {
-            e.printStackTrace();
+        } catch(GroovyRuntimeException e) {
+            stats.addError(e);
+            errorCase(e);
+        } catch(Throwable e) {
             stats.addError(e);
         } finally {
             LOCAL_SHELL.remove();

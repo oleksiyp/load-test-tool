@@ -1,12 +1,21 @@
+import groovy.lang.Binding
 import java.util.regex.Pattern
 import java.util.regex.Matcher
 import org.loadtest.ScriptRunner
 
-
-class Variations{
-    private static def getBindings() {
+class Context {
+    private static def getLocalShellBindings() {
+        if (ScriptRunner == null || ScriptRunner.getGroovyShell() == null) {
+            return null;
+        }
         return ScriptRunner.getGroovyShell().getContext();
     }
+
+    public static void main(String[] args) {}
+}
+
+public class Variations{
+    private static final RANDOM = new Random();
 
     public static def select(...args) {
         double v = 0;
@@ -17,7 +26,7 @@ class Variations{
         for (int i = 0; i < args.length; i += 2) {
             args[i] /= v;
         }
-        double coinExperiment = getBindings().RANDOM.nextDouble((double)1.0);
+        double coinExperiment = RANDOM.nextDouble((double)1.0);
         for (int i = 0; i < args.length; i += 2) {
             if (coinExperiment < args[i]) {
                 Closure closure = (Closure)args[i+1];
@@ -37,18 +46,14 @@ class Variations{
                 return null
             };
 
-            return args.get(getBindings().RANDOM.nextInt(args.size()));
+            return args.get(RANDOM.nextInt(args.size()));
         }
     }
 
     public static void main(String[] args) {}
 }
 
-class HTTP {
-    private static def getBindings() {
-        return ScriptRunner.getGroovyShell().getContext();
-    }
-
+public class HTTP {
     public static def get(Closure reporter, String ...urls) {
         long start = System.currentTimeMillis();
         String urlString = Variations.takeAny(urls);
@@ -77,10 +82,13 @@ class HTTP {
         }
         reader.close();
         if (conn instanceof HttpURLConnection) {
-            conn.disconnect();
+            ((HttpURLConnection)conn).disconnect();
         }
         long end = System.currentTimeMillis();
-        getBindings().STATS.addSample(urlString, end - start);
+        Binding bindings = Context.getLocalShellBindings();
+        if (bindings != null) {
+            bindings.STATS.addSample(urlString, end - start);
+        }
         return result;
     }
 
@@ -130,15 +138,15 @@ class HTTP {
 public class Globals {
     private Map values = new HashMap();
 
-    public synchronized void put(String name, Object value) {
+    private synchronized void instancePut(String name, Object value) {
         values.put(name, value);
     }
 
-    public synchronized Object get(String name) {
+    private synchronized Object instanceGet(String name) {
         return values.get(name);
     }
 
-    public synchronized List list(String name, String ...defaultValues) {
+    private synchronized List instanceList(String name, String ...defaultValues) {
         List list = (List) values.get(name);
         if (list == null) {
             list = Collections.synchronizedList(new ArrayList(Arrays.asList(defaultValues)));
@@ -147,7 +155,7 @@ public class Globals {
         return list;
     }
 
-    public synchronized long increment(String name) {
+    private synchronized long instanceIncrement(String name) {
         Number num = (Number)values.get(name);
         if (num == null) {
             num = 0L;
@@ -156,6 +164,36 @@ public class Globals {
         values.put(name, res + 1);
         return res;
     }
+
+    // used for alone script runs
+    private static Globals LOCAL_GLOBALS;
+
+    private synchronized static Globals getGlobals() {
+        Binding bindings = Context.getLocalShellBindings();
+        if (bindings == null || bindings.GLOBALS == null) {
+            if (LOCAL_GLOBALS == null) {
+                LOCAL_GLOBALS = new Globals();
+            }
+            return LOCAL_GLOBALS;
+        }
+        return bindings.GLOBALS;
+    }
+
+    // static part
+
+    public static void put(String name, Object value) {
+        getGlobals().instancePut(name, value);
+    }
+
+    public static Object get(String name) {
+        return getGlobals().instanceGet(name);
+    }
+
+    public static List list(String name, String ...defaultValues) {
+        return getGlobals().instanceList(name, defaultValues);
+    }
+
+    public static long increment(String name) {
+        return getGlobals().instanceIncrement(name);
+    }
 }
-
-

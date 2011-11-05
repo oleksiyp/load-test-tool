@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
  * Tool to run test load specified by script using several threads.
  * Main entry point.
  */
-@SuppressWarnings({"WeakerAccess", "WeakerAccess"})
+@SuppressWarnings({"WeakerAccess"})
 public class LoadTestTool {
     private final Options options;
     private ScheduledExecutorService executor;
