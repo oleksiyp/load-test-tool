@@ -1,6 +1,6 @@
 h1. Loadtest tool
 
-Tool could be used to test load your web application using different scenarios. Scripts are written in groovy using special test environment.
+Tool could be used to test load your web application using different scenarios. Scripts are written in groovy using loadtest API.
 
 h2. Run
 
@@ -8,7 +8,25 @@ Copy one loadtest-1.0.jar and Example*.groovy from repository to one of director
 
 java -jar loadtest-1.0.jar Example1.groovy
 
-h2. Environment
+Use -h option to display command line information:
+
+<pre>
+java -jar loadtest-1.0.jar -h
+java -jar loadtest.jar [options...] scripts...
+ -c (--threads) N            : Number of concurrent threads
+ -ci (--threads-increment) N : Number of concurrent threads to increment after
+                               stop/start (use [ENTER])
+ -d (--delay) N              : Seconds to delay between requests
+ -e (--eval) VAL             : Evaluate groovy script
+ -h (--help)                 : Display usage information
+ -ie (--init-eval) VAL       : Evaluate init script to initialize globals
+ -if (--init-file) FILE      : Runs init script to initialize globals
+ -n (--runs-number) N        : Number of runs to perform
+ -s (--show-slows) N         : Number of the slowest queries to show in
+                               statistics(by default 24)
+</pre>
+
+h2. Loadtest API
 
 For groovy scripts following classes available: HTTP and Variations. HTTP class could be used to create load. Variation helps to create non-deterministic behavior. Look groovy documentation and src/main/resources/org/loadtest/Classes.groovy for details.
 
@@ -46,6 +64,33 @@ h4. resolve(String name, String path)
 
 
 Resolves path relative to name.
+
+
+h3. Globals
+
+
+h4. get(String name)
+
+
+Get variable value shared in global map.
+
+
+h4. put(String name, Object value)
+
+
+Set variable value shared in global map.
+
+
+h4. list(String name, Object ...initValues)
+
+
+Initialize list(synchronized) in global map with values initValues.
+
+
+h4. increment(String name)
+
+
+Gets counter and increments or initializes it with 0 at start.
 
 
 h2. Tasks
