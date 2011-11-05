@@ -1,5 +1,5 @@
 // example of simple crawler
-// run: java -jar loadtest.jar -n 3 -d 1000 -ie 'GLOBALS.list("urls","http://google.com")' Crawler.groovy
+// run: java -jar loadtest.jar -n 3 -d 1000 -ie 'GLOBALS.instanceList("urls","http://google.com")' Crawler.groovy
 import java.util.regex.Pattern;
 
 try {
