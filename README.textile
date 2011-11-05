@@ -48,6 +48,29 @@ h4. resolve(String name, String path)
 Resolves path relative to name.
 
 
+h2. Tasks
+
+h3. Features
+
+Ask
+
+h3. Protocols
+
+* 30% HTTP
+* 0% FTP
+* 0% java call(classpath collector)
+
+h3. Proxies
+
+* 0% HTTP proxy
+* 0% internal proxy
+
+h3. Statistics
+
+* 0% Save statistics to file
+* 0% Process file to calculate percentiles, etc
+* 0% Prepare data for Excel, GNU PLOT etc
+
 h2. License
 
 Load test tool is distributed on terms of BSD-license. Look at src/main/resources/BSD-LICENSE.txt for details.
