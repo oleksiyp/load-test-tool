@@ -1,4 +1,3 @@
-import groovy.lang.Binding
 import java.util.regex.Pattern
 import java.util.regex.Matcher
 import org.loadtest.ScriptRunner
@@ -146,7 +145,7 @@ public class Globals {
         return values.get(name);
     }
 
-    private synchronized List instanceList(String name, String ...defaultValues) {
+    private synchronized List instanceList(String name, String []defaultValues) {
         List list = (List) values.get(name);
         if (list == null) {
             list = Collections.synchronizedList(new ArrayList(Arrays.asList(defaultValues)));
@@ -166,17 +165,16 @@ public class Globals {
     }
 
     // used for alone script runs
-    private static Globals LOCAL_GLOBALS;
+    private static Globals INSTANCE = new Globals();
 
     private synchronized static Globals getGlobals() {
         Binding bindings = Context.getLocalShellBindings();
-        if (bindings == null || bindings.GLOBALS == null) {
-            if (LOCAL_GLOBALS == null) {
-                LOCAL_GLOBALS = new Globals();
-            }
-            return LOCAL_GLOBALS;
+        if (!(bindings == null || bindings.getProperty("GLOBAL_VALUES") == null)) {
+            INSTANCE.values = bindings.GLOBAL_VALUES;
+        } else {
+            System.err.println("Local context used - globals not working");
         }
-        return bindings.GLOBALS;
+        return INSTANCE;
     }
 
     // static part

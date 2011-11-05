@@ -8,6 +8,7 @@ import org.codehaus.groovy.control.CompilationFailedException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Random;
 
 /**
@@ -20,7 +21,7 @@ import java.util.Random;
 public class ScriptRunner implements Runnable {
     private final LoadTestTool loadTool;
     private final Stats stats = new Stats();
-    private Object globals;
+    private HashMap globalValues = new HashMap();
     private final Random random = new Random();
     private final static ThreadLocal<GroovyShell> LOCAL_SHELL = new ThreadLocal<GroovyShell>();
 
@@ -66,6 +67,7 @@ public class ScriptRunner implements Runnable {
             stats.addRun();
         }
         Binding binding = new Binding();
+        binding.setProperty("GLOBAL_VALUES", globalValues);
         binding.setVariable("STATS", stats);
 
         GroovyShell shell = new GroovyShell(binding);
@@ -73,13 +75,6 @@ public class ScriptRunner implements Runnable {
             LOCAL_SHELL.set(shell);
 
             shell.evaluate(new GroovyCodeSource(ScriptRunner.class.getResource("Classes.groovy")));
-
-            synchronized (this) {
-                if (globals == null) {
-                    globals = shell.evaluate("return new Globals()");
-                }
-            }
-            binding.setProperty("GLOBALS", globals);
 
             runner.run(shell);
 
