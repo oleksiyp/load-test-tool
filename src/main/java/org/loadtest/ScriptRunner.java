@@ -6,7 +6,7 @@ import groovy.lang.GroovyShell;
 import org.codehaus.groovy.control.CompilationFailedException;
 
 import java.io.File;
-import java.util.List;
+import java.io.IOException;
 import java.util.Random;
 
 /**
@@ -16,14 +16,14 @@ import java.util.Random;
  *  RANDOM - random object
  */
 public class ScriptRunner implements Runnable {
-    private LoadTest load;
+    private LoadTestTool loadTool;
     private Stats stats = new Stats();
     private Object globals;
     private Random random = new Random();
     private static ThreadLocal local = new ThreadLocal();
 
-    public ScriptRunner(LoadTest load) {
-        this.load = load;
+    public ScriptRunner(LoadTestTool loadTool) {
+        this.loadTool = loadTool;
     }
 
     protected Binding createNewBinding() {
@@ -33,13 +33,39 @@ public class ScriptRunner implements Runnable {
         return binding;
     }
 
+    public void init() {
+        run(new GroovyShellRunner() {
+            public void run(GroovyShell shell) throws IOException {
+                for (String script : loadTool.getOptions().getInitScriptTexts()) {
+                    shell.evaluate(script);
+                }
+
+                for (File script : loadTool.getOptions().getInitScripts()) {
+                    shell.evaluate(script);
+                }
+            }});
+    }
+
     public void run() {
+        run(new GroovyShellRunner() {
+            public void run(GroovyShell shell) throws IOException {
+                for (String script : loadTool.getOptions().getScriptTexts()) {
+                    shell.evaluate(script);
+                }
+
+                for (File script : loadTool.getOptions().getScripts()) {
+                    shell.evaluate(script);
+                }
+            }});
+    }
+
+    public void run(GroovyShellRunner runner) {
         synchronized (stats) {
-            if (load.getOptions().getRequests() != -1
-                    && stats.getRuns() >= load.getOptions().getRequests()) {
+            if (loadTool.getOptions().getRequests() != -1
+                    && stats.getRuns() >= loadTool.getOptions().getRequests()) {
                 stats.report(Integer.MAX_VALUE);
                 System.out.println("Finnished(press q[ENTER] - to quit, [ENTER][ENTER] - to restart)");
-                load.stop();
+                loadTool.stop();
                 return;
             }
             stats.addRun();
@@ -58,13 +84,7 @@ public class ScriptRunner implements Runnable {
             }
             binding.setVariable("GLOBALS", globals);
 
-            for (String script : load.getOptions().getScriptTexts()) {
-                shell.evaluate(script);
-            }
-
-            for (File script : load.getOptions().getScripts()) {
-                shell.evaluate(script);
-            }
+            runner.run(shell);
 
         } catch (CompilationFailedException e) {
             stats.addError();
@@ -76,10 +96,14 @@ public class ScriptRunner implements Runnable {
         }
     }
 
+    private interface GroovyShellRunner {
+        void run(GroovyShell shell) throws IOException;
+    }
+
     private void errorCase(Exception e) {
-        if (!load.isStopped()) {
+        if (!loadTool.isStopped()) {
             e.printStackTrace();
-            load.stop();
+            loadTool.stop();
         }
     }
 

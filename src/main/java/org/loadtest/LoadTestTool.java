@@ -18,13 +18,13 @@ import java.util.concurrent.TimeUnit;
  * Tool to run test load specified by script using several threads.
  * Main entry point.
  */
-public class LoadTest {
+public class LoadTestTool {
     private final Options options;
     private ScheduledExecutorService executor;
     private ScheduledExecutorService printExecutor;
     private ScriptRunner scriptRunner;
 
-    public LoadTest(Options options) {
+    public LoadTestTool(Options options) {
         this.options = options;
     }
 
@@ -53,7 +53,9 @@ public class LoadTest {
     }
 
     public synchronized void stop() {
-        if (executor == null) { return; }
+        if (executor == null) {
+            return;
+        }
         executor.shutdownNow();
         executor = null;
         printExecutor.shutdownNow();
@@ -66,7 +68,7 @@ public class LoadTest {
     }
 
     public static void main(String[] args) throws IOException {
-        LoadTest testload = new LoadTest(new Options().parse(args));
+        LoadTestTool testload = new LoadTestTool(new Options().parse(args));
         Scanner scanner = new Scanner(System.in);
         try {
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
@@ -114,6 +116,12 @@ public class LoadTest {
 
         @Option(name="-e", usage="Evaluate groovy script", aliases="--eval")
         private List<String> scriptTexts = new ArrayList<String>();
+
+        @Option(name="-ie", usage="Evaluate init script to initialize globals", aliases="--init-eval")
+        private List<String> initScriptTexts;
+
+        @Option(name="-if", usage="Runs init script to initialize globals", aliases="--init-file")
+        private List<File> initScripts;
 
         @Argument
         private List<File> scripts = new ArrayList();
@@ -187,6 +195,14 @@ public class LoadTest {
 
         public List<File> getScripts() {
             return scripts;
+        }
+
+        public List<String> getInitScriptTexts() {
+            return initScriptTexts;
+        }
+
+        public List<File> getInitScripts() {
+            return initScripts;
         }
     }
 
