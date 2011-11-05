@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
  * Tool to run test load specified by script using several threads.
  * Main entry point.
  */
+@SuppressWarnings({"WeakerAccess", "WeakerAccess"})
 public class LoadTestTool {
     private final Options options;
     private ScheduledExecutorService executor;
@@ -64,33 +65,34 @@ public class LoadTestTool {
         scriptRunner = null;
     }
 
-    public boolean isStopped() {
-        return executor == null;
+    public boolean isStarted() {
+        return executor != null;
     }
 
     public static void main(String[] args) throws IOException {
-        LoadTestTool testload = new LoadTestTool(new Options().parse(args));
+        LoadTestTool loadtest = new LoadTestTool(new Options().parse(args));
         Scanner scanner = new Scanner(System.in);
-        int nThreads = testload.getOptions().getConcurrentThreads();
+        int nThreads = loadtest.getOptions().getConcurrentThreads();
         try {
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
             do {
                 System.out.println("Starting with " + nThreads + " threads (press q[ENTER] - to quit, [ENTER] - to stop)");
-                testload.start(nThreads);
+                loadtest.start(nThreads);
                 if (scanner.nextLine().equals("q")) {
                     break;
                 }
                 System.out.println("Stopping (press q[ENTER] - to quit, [ENTER] - to start)");
-                testload.stop();
+                loadtest.stop();
 
-                int increment = testload.getOptions().getConcurrentThreadsIncrement();
+                int increment = loadtest.getOptions().getConcurrentThreadsIncrement();
                 if (increment > 0) {
                     nThreads += increment;
                 }
             } while (!scanner.nextLine().equals("q"));
         } catch (Throwable thr) {
-            System.out.println("Breaked");
+            System.out.println("Error happened: " + thr);
         }
+        System.exit(0);
     }
 
     public synchronized ScriptRunner getScriptRunner() {
@@ -101,6 +103,7 @@ public class LoadTestTool {
         return options;
     }
 
+    @SuppressWarnings({"UnusedDeclaration"})
     public static class Options {
         @Option(name="-n", usage="Number of runs to perform", aliases = "--runs-number")
         private int requests = -1;
@@ -112,11 +115,6 @@ public class LoadTestTool {
         @Option(name="-ci", usage="Number of concurrent threads to increment after stop/start (use [ENTER])", aliases = "--threads-increment")
         private int concurrentThreadsIncrement = 0;
 
-        /*
-        @Option(name="-t", usage="Seconds to max. wait for responses", aliases = "--time-limit")
-        private double timelimit = 0;
-        */
-
         @Option(name="-h", usage="Display usage information", aliases="--help")
         private boolean displayUsage = false;
 
@@ -127,16 +125,16 @@ public class LoadTestTool {
         private int slowQueriesToShow = 24;
 
         @Option(name="-e", usage="Evaluate groovy script", aliases="--eval")
-        private List<String> scriptTexts = new ArrayList<String>();
+        private final List<String> scriptTexts = new ArrayList<String>();
 
         @Option(name="-ie", usage="Evaluate init script to initialize globals", aliases="--init-eval")
-        private List<String> initScriptTexts = new ArrayList<String>();
+        private final List<String> initScriptTexts = new ArrayList<String>();
 
         @Option(name="-if", usage="Runs init script to initialize globals", aliases="--init-file")
-        private List<File> initScripts = new ArrayList<File>();
+        private final List<File> initScripts = new ArrayList<File>();
 
         @Argument
-        private List<File> scripts = new ArrayList();
+        private final List<File> scripts = new ArrayList<File>();
 
         public Options() {
         }

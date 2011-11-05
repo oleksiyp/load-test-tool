@@ -4,7 +4,7 @@ import java.util.regex.Pattern;
 
 try {
     List urls = GLOBALS.list("urls");
-    String url = Variations.any(urls);
+    String url = Variations.takeAny(urls);
     if (url == null) {
         return;
     }

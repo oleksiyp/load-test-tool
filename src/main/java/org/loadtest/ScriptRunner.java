@@ -11,16 +11,17 @@ import java.util.Random;
 
 /**
  * Runs scripts in environment produced by "Classes.groovy" and three bindings:
- *  GLOBAL - global variables interchanger,
+ *  GLOBAL - global variables interchanged
  *  STATS - statistics object,
  *  RANDOM - random object
  */
+@SuppressWarnings({"WeakerAccess"})
 public class ScriptRunner implements Runnable {
-    private LoadTestTool loadTool;
-    private Stats stats = new Stats();
+    private final LoadTestTool loadTool;
+    private final Stats stats = new Stats();
     private Object globals;
-    private Random random = new Random();
-    private static ThreadLocal local = new ThreadLocal();
+    private final Random random = new Random();
+    private final static ThreadLocal<GroovyShell> LOCAL_SHELL = new ThreadLocal<GroovyShell>();
 
     public ScriptRunner(LoadTestTool loadTool) {
         this.loadTool = loadTool;
@@ -64,7 +65,7 @@ public class ScriptRunner implements Runnable {
             if (loadTool.getOptions().getRequests() != -1
                     && stats.getRuns() >= loadTool.getOptions().getRequests()) {
                 stats.report(Integer.MAX_VALUE);
-                System.out.println("Finnished(press q[ENTER] - to quit, [ENTER][ENTER] - to restart)");
+                System.out.println("Finished (press q[ENTER] - to quit, [ENTER][ENTER] - to restart)");
                 loadTool.stop();
                 return;
             }
@@ -73,13 +74,13 @@ public class ScriptRunner implements Runnable {
         Binding binding = createNewBinding();
         GroovyShell shell = new GroovyShell(binding);
         try {
-            local.set(shell);
+            LOCAL_SHELL.set(shell);
 
             shell.evaluate(new GroovyCodeSource(ScriptRunner.class.getResource("Classes.groovy")));
 
             synchronized (this) {
                 if (globals == null) {
-                    globals = shell.evaluate("new Globals()");
+                    globals = shell.evaluate("return new Globals()");
                 }
             }
             binding.setVariable("GLOBALS", globals);
@@ -87,13 +88,13 @@ public class ScriptRunner implements Runnable {
             runner.run(shell);
 
         } catch (CompilationFailedException e) {
-            stats.addError();
+            stats.addError(e);
             errorCase(e);
         } catch (Throwable e) {
             e.printStackTrace();
-            stats.addError();
+            stats.addError(e);
         } finally {
-            local.remove();
+            LOCAL_SHELL.remove();
         }
     }
 
@@ -102,7 +103,7 @@ public class ScriptRunner implements Runnable {
     }
 
     private void errorCase(Exception e) {
-        if (!loadTool.isStopped()) {
+        if (loadTool.isStarted()) {
             e.printStackTrace();
             loadTool.stop();
         }
@@ -113,6 +114,6 @@ public class ScriptRunner implements Runnable {
     }
 
     public static GroovyShell getGroovyShell() {
-        return (GroovyShell) local.get();
+        return LOCAL_SHELL.get();
     }
 }

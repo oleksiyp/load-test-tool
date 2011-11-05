@@ -17,24 +17,26 @@ class Variations{
         for (int i = 0; i < args.length; i += 2) {
             args[i] /= v;
         }
-        double coinExperiment = getBindings().RANDOM.nextDouble(1.0);
+        double coinExperiment = getBindings().RANDOM.nextDouble((double)1.0);
         for (int i = 0; i < args.length; i += 2) {
             if (coinExperiment < args[i]) {
-                args[i+1]();
+                Closure closure = (Closure)args[i+1];
+                closure.call();
                 break;
             }
         }
     }
 
-    public static def any(Object ...args) {
-        return any(Arrays.asList(args));
+    public static def takeAny(Object ...args) {
+        return takeAny(Arrays.asList(args));
     }
 
-    public static def any(List args) {
+    public static def takeAny(List args) {
         synchronized(args) {
             if (args.size() == 0) {
                 return null
             };
+
             return args.get(getBindings().RANDOM.nextInt(args.size()));
         }
     }
@@ -49,9 +51,9 @@ class HTTP {
 
     public static def get(Closure reporter, String ...urls) {
         long start = System.currentTimeMillis();
-        String urlString = Variations.any(urls);
+        String urlString = Variations.takeAny(urls);
         if (urlString == null) {
-            throw new IllegalArgumentException("url should not be null");
+            throw new IllegalArgumentException("name should not be null");
         }
         URL url = new URL(urlString);
         URLConnection conn = url.openConnection();
@@ -70,7 +72,7 @@ class HTTP {
         Object result = null;
         while ((line = reader.readLine()) != null) {
             if (reporter != null) {
-                result = reporter(line);
+                result = reporter.call(line);
             }
         }
         reader.close();
