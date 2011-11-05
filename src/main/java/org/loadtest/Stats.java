@@ -5,6 +5,7 @@ import java.util.*;
 /**
  * Class accumulates statistics: number of runs, errors, queries and http fetch execution time.
  */
+@SuppressWarnings({"WeakerAccess"})
 public class Stats {
     public Stats() {
         reset();
@@ -14,27 +15,27 @@ public class Stats {
         runs = 0;
         samples = 0;
         errors = 0;
-        urlStats = new TreeMap();
+        sampleStats = new TreeMap<String, SampleStat>();
     }
 
     private int runs;
     private int samples;
     private int errors;
-    private Map urlStats;
+    private Map<String, SampleStat> sampleStats;
 
     public int getRuns() {
         return runs;
     }
 
-    private static class UrlStat {
+    private static class SampleStat {
         private int count;
         private long time;
         private long minimum;
         private long maximum;
-        private final String url;
+        private final String name;
 
-        private UrlStat(String url) {
-            this.url = url;
+        private SampleStat(String name) {
+            this.name = name;
         }
 
 
@@ -49,7 +50,7 @@ public class Stats {
             this.count++;
         }
 
-        public double getAvarage() {
+        public double getAverage() {
             if (count == 0) {
                 return 0;
             } else {
@@ -65,45 +66,54 @@ public class Stats {
             return maximum;
         }
 
-        public String getUrl() {
-            return url;
+        public String getName() {
+            return name;
         }
     }
 
     public synchronized void addRun() { runs++; }
     public synchronized void addSample(String url, long time) {
         samples++;
-        UrlStat stat = (UrlStat) urlStats.get(url);
+        SampleStat stat = sampleStats.get(url);
         if (stat == null) {
-            stat = new UrlStat(url);
-            urlStats.put(url, stat);
+            stat = new SampleStat(url);
+            sampleStats.put(url, stat);
         }
         stat.add(time);
     }
-    public synchronized void addError() { errors++; }
+    @SuppressWarnings({"UnusedParameters"})
+    public synchronized void addError(Throwable thr) { errors++; }
 
-    public synchronized void report(int slowQueriesToShow) {
+    public synchronized void report(int slowSamplesToShow) {
         System.out.println("Stats{" +
                 "runs=" + runs +
                 ", samples=" + samples +
                 ", errors=" + errors +
                 '}');
-        List lst = new ArrayList(urlStats.values());
-        Collections.sort(lst, new UrlStatComparator());
-        for (Object stat : lst.subList(0, Math.min(slowQueriesToShow, lst.size()))) {
-            UrlStat urlStat = (UrlStat) stat;
+        List<SampleStat> list = new ArrayList<SampleStat>(sampleStats.values());
+
+        // sort & cut states
+        Collections.sort(list, new SlowestSampleStatComparator());
+        list = list.subList(0, Math.min(slowSamplesToShow, list.size()));
+
+        for (SampleStat sampleStat : list) {
+
+            // cut string
+            String statName = sampleStat.getName();
+            statName = statName.substring(0, Math.min(45, statName.length()));
+
             System.out.printf("min=%5d avg=%8.2f max=%5d %s%n",
-                    urlStat.getMinimum(),
-                    urlStat.getAvarage(),
-                    urlStat.getMaximum(),
-                    urlStat.getUrl().substring(0, Math.min(45, urlStat.getUrl().length())));
+                    sampleStat.getMinimum(),
+                    sampleStat.getAverage(),
+                    sampleStat.getMaximum(),
+                    statName);
 
         }
     }
 
-    private class UrlStatComparator implements Comparator<UrlStat> {
-        public int compare(UrlStat o1, UrlStat o2) {
-            return -Double.compare(o1.getAvarage(), o2.getAvarage());
+    private class SlowestSampleStatComparator implements Comparator<SampleStat> {
+        public int compare(SampleStat o1, SampleStat o2) {
+            return -Double.compare(o1.getAverage(), o2.getAverage());
         }
     }
 }
