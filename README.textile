@@ -1,10 +1,10 @@
 h1. Loadtest tool
 
-Tool could be used to test load your web application using different scenarios. Scripts are written in groovy using loadtest API.
+This tool could be used to test load your web application using different scenarios. Scripts are written in groovy using loadtest API.
 
 h2. Run
 
-Copy one loadtest-1.0.jar and Example*.groovy from repository to one of directories on your computer. Use java to run it from commandline:
+Copy one loadtest-1.0.jar and Example*.groovy from repository to a directory on your computer. Use java to run it from commandline:
 
 <pre>
 java -jar loadtest-1.0.jar Example1.groovy
@@ -30,7 +30,7 @@ java -jar loadtest.jar [options...] scripts...
 
 h2. Loadtest API
 
-For groovy scripts following classes available: HTTP and Variations. HTTP class could be used to create load. Variation helps to create non-deterministic behavior. Look groovy documentation and src/main/resources/org/loadtest/Classes.groovy for details.
+For groovy scripts following classes are available: HTTP and Variations. HTTP class could be used to create load. Variation helps to create non-deterministic behavior. For details please refer to the groovy documentation and src/main/resources/org/loadtest/Classes.groovy
 
 h3. Variations
 
